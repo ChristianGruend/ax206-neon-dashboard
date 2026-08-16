@@ -5,7 +5,7 @@ picture frame that normally cycles through holiday snaps. It shows one ring per
 CPU thread, GPU and VRAM load, the five largest memory consumers as a coloured
 pie ring, disk fill and throughput, network rates, and a lamp per service.
 
-![The dashboard](doc/dashboard.png)
+![The dashboard](doc/dashboard-demo.png)
 
 Driven by [lcd4linux](https://lcd4linux.bulix.org/), which talks to the frame
 over USB. The panel is physically 480×320 and mounted portrait via
