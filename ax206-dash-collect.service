@@ -1,0 +1,25 @@
+[Unit]
+Description=Metrik-Collector fuer das AX206-Dashboard (lcd4linux)
+Documentation=file:///etc/lcd4linux/README-ax206-dashboard.md
+# lcd4linux liest /run/lcd4linux/metrics - ohne diesen Dienst bleiben die
+# Felder fuer Kern-Last, Dienste-Ampeln, GPU und Wetter leer.
+Before=lcd4linux-ax206.service
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mkdir -p /run/lcd4linux
+ExecStart=/usr/local/bin/ax206-dash-collect.py eth0
+Restart=always
+RestartSec=5
+Nice=10
+IOSchedulingClass=idle
+
+# Der Collector liest nur /proc, /sys und ruft ein paar Kommandos auf.
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/run/lcd4linux
+ProtectHome=read-only
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

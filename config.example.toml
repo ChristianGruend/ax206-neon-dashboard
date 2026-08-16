@@ -1,0 +1,136 @@
+# AX206 Neon Dashboard - machine configuration.
+#
+# Copy to config.toml and adjust. Both the collector and the theme generator
+# read this file, so a value only ever exists once. Lookup order:
+#
+#   1. $AX206_CONFIG
+#   2. config.toml next to the scripts   (running from the repo)
+#   3. /etc/lcd4linux/ax206-dashboard.toml   (installed by install.sh)
+#
+# Everything that is specific to one machine lives here. If a field is wrong
+# the dashboard still renders - the affected value just shows "-" or 0.
+
+[system]
+# Network interface used for throughput, totals and the LAN address.
+interface = "enp3s0"
+
+# CPU threads, i.e. how many core rings are drawn. 0 = detect automatically.
+# Set it explicitly if you want fewer rings than the machine has threads.
+cpu_threads = 0
+
+# Free text in the CPU and GPU header rows. lcd4linux has no room for the
+# full model string, so this is yours to shorten.
+cpu_model = "RYZEN 5 5600"
+gpu_model = "RX 6700 XT"
+
+# Owner of the FUSE mounts (rclone and friends). The collector runs as root,
+# rclone usually mounts without allow_other, and root is then locked out
+# *silently*: statvfs returns f_blocks = 0 rather than an error. Such paths
+# are queried via `runuser -u <owner> -- df` instead.
+mount_owner = "youruser"
+
+# Directory whose newest archive gives the "BKP" age. Empty disables it.
+backup_dir = "~/backups"
+
+# hwmon driver for board temperature and CPU fan. hwmon numbers shuffle on
+# every boot, so sensors are resolved by driver name, never as "hwmon2".
+# Find yours with: grep . /sys/class/hwmon/hwmon*/name
+board_sensor = "asus_wmi_sensors"
+
+# A second address shown next to the LAN one, usually a VPN. Empty leaves the
+# field out entirely.
+vpn_device = "tailscale0"
+vpn_label = "TS"
+
+[display]
+# Edge length of the ring gauges in pixels. The generator reads this too, so
+# rendered size and layout box cannot drift apart.
+gauge_size = 44
+
+# How many memory hogs are listed and coloured in the RAM ring.
+top_processes = 5
+
+# How many screens are listed under the GPU block.
+screens = 3
+
+[weather]
+# Anything wttr.in understands - a town, an airport code, "~Eiffel+Tower".
+# Empty disables the weather field.
+location = "Berlin"
+
+# Disks, in the order their rings appear. The number of slots is deliberately
+# fixed: an unmounted slot shows 0 % and "-" instead of shifting every line
+# after it. Local and network mounts alike; label is what fits under a ring,
+# which is about seven characters.
+[[disks]]
+label = "ROOT"
+path = "/"
+
+[[disks]]
+label = "DATA"
+path = "/mnt/data"
+
+[[disks]]
+label = "CLOUD"
+path = "~/GoogleDrive"
+
+# Optional Docker section with its own colour: uptime and memory of one
+# container in the header, plus a lamp per companion service. Remove the
+# whole [stack] block to drop the section from the layout.
+[stack]
+label = "MYSTACK"
+
+# Container whose uptime and memory are shown. Read from its cgroup rather
+# than via `docker stats`, which takes about a second and would stall the
+# collection loop every time.
+container = "mystack-app-1"
+
+# Lamps for the stack, drawn in the section colour. Keep the labels to four
+# characters - below that width they get cut.
+[[stack.lamps]]
+label = "APP"
+port = 8000
+
+[[stack.lamps]]
+label = "DB"
+port = 5432
+
+[[stack.lamps]]
+label = "CACHE"
+port = 6379
+
+[[stack.lamps]]
+label = "MQ"
+port = 5672
+
+# System lamps, drawn in the CPU colour. Filled = up, visible dark red
+# background = down. Four kinds:
+#
+#   port    - port = 8080, or ports = [8203, 8204] if either will do
+#   systemd - unit = "docker"
+#   netdev  - device = "tailscale0", i.e. does the interface exist
+#   ping    - host = "1.1.1.1"
+[[services]]
+label = "DOCK"
+kind = "systemd"
+unit = "docker"
+
+[[services]]
+label = "OLLA"
+kind = "port"
+port = 11434
+
+[[services]]
+label = "MCP"
+kind = "port"
+ports = [8203, 8204]
+
+[[services]]
+label = "TS"
+kind = "netdev"
+device = "tailscale0"
+
+[[services]]
+label = "NET"
+kind = "ping"
+host = "1.1.1.1"
