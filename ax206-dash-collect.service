@@ -7,17 +7,26 @@ Before=lcd4linux-ax206.service
 
 [Service]
 Type=simple
-ExecStartPre=/bin/mkdir -p /run/lcd4linux
 ExecStart=/usr/local/bin/ax206-dash-collect.py eth0
 Restart=always
 RestartSec=5
 Nice=10
 IOSchedulingClass=idle
 
+# /run ist tmpfs und nach jedem Boot leer. Das Verzeichnis deshalb von
+# systemd anlegen lassen, nicht per ExecStartPre=mkdir: ReadWritePaths gilt
+# auch fuer ExecStartPre, und dessen Mount-Namespace scheitert an einem Pfad,
+# den erst dieser Aufruf erzeugen soll (Fehler 226/NAMESPACE, Endlos-Restart).
+# RuntimeDirectory laeuft vor dem Namespace und macht den Pfad beschreibbar.
+RuntimeDirectory=lcd4linux
+RuntimeDirectoryMode=0755
+# Beim Neustart des Collectors stehenlassen, sonst greift lcd4linux waehrend
+# der Luecke ins Leere.
+RuntimeDirectoryPreserve=yes
+
 # Der Collector liest nur /proc, /sys und ruft ein paar Kommandos auf.
 NoNewPrivileges=true
 ProtectSystem=strict
-ReadWritePaths=/run/lcd4linux
 ProtectHome=read-only
 PrivateTmp=true
 
